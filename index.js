@@ -35,7 +35,7 @@ async function sendMsg(ids, content) {
   const userid_list = ids;
   const msg = { msgtype: 'text', text: { content } };
   const data = { agent_id, userid_list, msg };
-  console.log(data);
+  // console.log(data);
   let res = await axios.post(`${ddapi.baseUrl}/topapi/message/corpconversation/asyncsend_v2`, data);
 
   if (res.status != 200) {
