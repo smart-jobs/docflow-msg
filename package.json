@@ -1,0 +1,26 @@
+{
+  "name": "docflow-msg",
+  "version": "1.0.0",
+  "description": "公文系统消息处理服务",
+  "main": "index.js",
+  "scripts": {
+    "start": "pm2 start",
+    "restart": "pm2 restart docflow-msg",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smart-jobs/docflow-msg.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/smart-jobs/docflow-msg/issues"
+  },
+  "homepage": "https://github.com/smart-jobs/docflow-msg#readme",
+  "dependencies": {
+    "amqplib": "^0.5.3",
+    "axios": "^0.18.0",
+    "moment": "^2.24.0"
+  }
+}
