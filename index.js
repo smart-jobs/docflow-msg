@@ -4,19 +4,33 @@ const moment = require('moment');
 const amqp = require('amqplib');
 const axios = require('axios');
 
-const ex = 'service.docs';
-const url = 'amqp://smart:smart123@192.168.1.190/smart';
-
-const ddapi = {
+const config = process.env.NODE_ENV === 'production' ? {
+  // config for prod
+  mq: {
+    ex: 'service.docs',
+    url: 'amqp://smart:smart123@192.168.1.190/smart',
+  },
   // dingtalk接口服务
-  // baseUrl: 'http://smart.chinahuian.cn/ddapi/dd',
-  // agent_id: 213726900,// for dev
-  baseUrl: 'http://localhost:8008/dd',
-  agent_id: 250971150, // for jilinjobs
+  ddapi: {
+    baseUrl: 'http://localhost:8008',
+    agent_id: 250971150, // for jilinjobs
+  },
+}: {
+  // config for dev
+  mq: {
+    ex: 'service.docs',
+    url: 'amqp://smart:smart123@172.17.116.100/smart',
+  },
+  // dingtalk接口服务
+  ddapi: {
+    baseUrl: 'http://smart.cc-lotus.info/ddapi',
+    agent_id: 213726900,// for dev
+  },
 };
 
 async function getUsers(unit) {
-  let res = await axios.get(`http://localhost:8008/api/unit_users?unit=${unit}`);
+  const { baseUrl } = config.ddapi;
+  let res = await axios.get(`${baseUrl}/api/unit_users?unit=${unit}`);
   if (res.status != 200) {
     console.log(res.data);
     throw new Error('网络错误');
@@ -31,19 +45,20 @@ async function getUsers(unit) {
 
 async function sendMsg(ids, content) {
   // TODO: 发送通知
-  const { agent_id } = ddapi;
+  const { baseUrl, agent_id } = config.ddapi;
   const userid_list = ids;
   const msg = { msgtype: 'text', text: { content } };
   const data = { agent_id, userid_list, msg };
   // console.log(data);
-  let res = await axios.post(`${ddapi.baseUrl}/topapi/message/corpconversation/asyncsend_v2`, data);
+  let res = await axios.post(`${baseUrl}/dd/topapi/message/corpconversation/asyncsend_v2`, data);
 
   if (res.status != 200) {
-    console.log(res.data);
+    console.debug(res.data);
     throw new Error('网络错误');
   }
   res = res.data;
   if (res.errcode !== 0) {
+    console.debug(res.data);
     throw new Error(`${res.errcode} - ${res.errmsg}`);
   }
 }
@@ -55,8 +70,12 @@ async function logMessage(msg) {
   data.units.forEach(async p => {
     try {
       const ids = await getUsers(p);
-      console.log(' [s] %s %s - %s', p, ids, data.msg);
-      await sendMsg(ids, data.msg);
+      if(ids && ids.length > 0) {
+        console.log(' [s] [%s] %s - %s', p, ids, data.msg);
+        await sendMsg(ids, data.msg);
+      } else {
+        console.log(' [s] [%s] 接收用户为空 - %s', p, ids, data.msg);
+      }
     } catch (err) {
       console.warn(err);
     }
@@ -64,6 +83,7 @@ async function logMessage(msg) {
 }
 
 async function doWork() {
+  const { url, ex } = config.mq;
   const conn = await amqp.connect(url);
   const ch = await conn.createChannel();
   await ch.assertExchange(ex, 'topic', { durable: true });

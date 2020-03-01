@@ -13,5 +13,8 @@ module.exports = {
     env: {
       NODE_ENV: 'production', // 环境参数，当前指定为生产环境
     },
+    env_dev: {
+      NODE_ENV: 'development', // 环境参数，当前指定为生产环境
+    },
   }],
 };

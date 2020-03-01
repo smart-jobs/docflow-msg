@@ -4,6 +4,7 @@
   "description": "公文系统消息处理服务",
   "main": "index.js",
   "scripts": {
+    "dev": "pm2 start --env dev",
     "start": "pm2 start",
     "restart": "pm2 restart docflow-msg",
     "test": "echo \"Error: no test specified\" && exit 1"
